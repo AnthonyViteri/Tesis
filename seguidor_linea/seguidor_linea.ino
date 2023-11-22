@@ -1,3 +1,10 @@
+/*
+-----UNIVERSIDAD DE LAS FUERZAS ARMADAS ESPE-----
+Tema: Seguidor de Linea para proyecto de Tesis
+Autores: Banda Jonathan y Viteri Anthony
+*/
+
+//-----Librerias-----
 
 
 void setup() {
