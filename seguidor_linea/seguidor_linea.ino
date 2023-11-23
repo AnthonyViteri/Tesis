@@ -6,6 +6,7 @@ Autores: Banda Jonathan y Viteri Anthony
 
 //-----Libreria QTR-----
 #include <QTRSensors.h>
+QTRSensors qtr;
 
 const uint8_t SensorCount = 8; //Definimos el numero de sensores
 uint16_t sensorValues[SensorCount]; //Creamos un arreglo
@@ -21,8 +22,11 @@ uint16_t sensorValues[SensorCount]; //Creamos un arreglo
 #define leftMotor2 8 //pin driver4
 #define leftMotorPWM 11 //pin pwmB
 
+#define BaseSpeed 150
+#define MaxSpeed 255
+
 //-----Variables para el control PID-----
-float Kp,,Ki,Kd,Ts,sv,pv;
+float Kp,Ki,Kd,Ts,sv,pv;
 float e,e_1,e_2;
 int u,u_1;
 
@@ -40,8 +44,6 @@ void setup() {
   pinMode(leftMotor1, OUTPUT);
   pinMode(leftMotor2, OUTPUT);
   pinMode(leftMotorPWM, OUTPUT);
-  #define BaseSpeed 150
-  #define MaxSpedd 255
   delay(500);
   pinMode(LED_BUILTIN, OUTPUT); //Pin predeterminado el Arduino led integrado en placa pin 13
   digitalWrite(LED_BUILTIN, HIGH); // Prendemos el LED para indicar que estamos en modo calibracion
@@ -104,8 +106,8 @@ void loop() {
 
   //Aplicamos el control con el ecuacion a diferencias
   u = u_1 + (Kp*(e-e_1)) + (Ki*e*Ts) + (Kd*((e-(2*e_1)+e_2)/Ts));
-  int rightMotorSpeed = BaseSpeed + ut;
-  int leftMotorSpeed = BaseSpeed - ut;
+  int rightMotorSpeed = BaseSpeed + u;
+  int leftMotorSpeed = BaseSpeed - u;
 
   if (rightMotorSpeed > MaxSpeed ) rightMotorSpeed = MaxSpeed; // prevent the motor from going beyond max speed
   if (leftMotorSpeed > MaxSpeed ) leftMotorSpeed = MaxSpeed; // prevent the motor from going beyond max speed
@@ -119,9 +121,9 @@ void loop() {
     digitalWrite(leftMotor2, LOW);
     analogWrite(leftMotorPWM, leftMotorSpeed);
   }
-  e_1 = et;
-  e_2 = et_1;
-  u_1 = ut;
+  e_1 = e;
+  e_2 = e_1;
+  u_1 = u;
 } 
 
 
