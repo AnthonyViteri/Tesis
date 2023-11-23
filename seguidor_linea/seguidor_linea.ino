@@ -22,21 +22,21 @@ uint16_t sensorValues[SensorCount]; //Creamos un arreglo
 #define leftMotor2 8 //pin driver4
 #define leftMotorPWM 11 //pin pwmB
 
-#define BaseSpeed 150
+#define BaseSpeed 255
 #define MaxSpeed 255
 
 //-----Variables para el control PID-----
-float Kp,Ki,Kd,Ts,sv,pv;
+float Kp,Ki,Kd,Ts,sp,pv;
 float e,e_1,e_2;
 int u,u_1;
 
 void setup() {
-  //set timer 2 divisor to  1024 for PWM frequency of    30.64 Hz
-  TCCR2B = TCCR2B & B11111000 | B00000111;   
+
   //Configuramos el sensor
   qtr.setTypeAnalog(); // Definimos los valores como analogicos
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, SensorCount);//Definimos los pines
   qtr.setEmitterPin(2); //Definimos el pin el emisor
+  
   //Configuramos los pines de los motores
   pinMode(rightMotor1, OUTPUT);
   pinMode(rightMotor2, OUTPUT);
@@ -52,26 +52,19 @@ void setup() {
    * 10 lecturas por llamada a calibrate() = ~24 ms por llamada a calibrate().
    Llame a calibrate() 400 veces para que la calibración dure unos 10 segundos.
   */
-  for (uint16_t i = 0; i < 200; i++) //Calibracion durante 4.8s
+  for (uint16_t i = 0; i <= 60; i++)
   {
     if (i <= 10){motorLeft();}
     else if (i >= 11 && i<=30){motorRight();}
     else if (i >= 31 && i <= 50){motorLeft();}
-    else if (i >= 51 && i <= 70){motorRight();}
-    else if (i >= 71 && i<=90){motorRight();}
-    else if (i >= 91 && i <= 110){motorLeft();}
-    else if (i >= 111 && i <= 130){motorRight();}
-    else if (i >= 131 && i<=150){motorRight();}
-    else if (i >= 151 && i <= 170){motorLeft();}
-    else if (i >= 171 && i <= 190){motorRight();}
-    else if (i >= 191 && i<=200){motorRight();}
+    else if (i >= 51 && i <= 60){motorRight();}
     qtr.calibrate();
-    delay(1);
+    delay(0.5);
   }
   motorStop();
   digitalWrite(LED_BUILTIN, LOW); // Apagamos el LED para indicar que salimos de modo calibracion
   //Configuramos el Serial
-  Serial.begin(115200);
+  Serial.begin(9600);
   // imprimimos los valores mínimos de calibración medidos cuando los emisores estaban encendidos
   for (uint8_t i = 0; i < SensorCount; i++)
   {
@@ -86,10 +79,11 @@ void setup() {
     Serial.print(' ');
   }
   Serial.println();
-  sv = 3500;
-  Kp=5;
-  Ki=2;
-  Kd=0.0001;
+  delay(2000);
+  sp = 3500;
+  Kp=2;
+  Ki=0;
+  Kd=0;
   Ts = 0.01;
   e = 0;
   e_1 = 0;
@@ -104,8 +98,14 @@ void loop() {
   */ 
   uint16_t position = qtr.readLineBlack(sensorValues);
 
+  e = position - 3500; //Sacamos el error
+
   //Aplicamos el control con el ecuacion a diferencias
   u = u_1 + (Kp*(e-e_1)) + (Ki*e*Ts) + (Kd*((e-(2*e_1)+e_2)/Ts));
+  if (u > 255) {u = 255;}
+  else if (u < 0) {u = 0;}
+  else{u = u;}
+
   int rightMotorSpeed = BaseSpeed + u;
   int leftMotorSpeed = BaseSpeed - u;
 
@@ -124,32 +124,6 @@ void loop() {
   e_1 = e;
   e_2 = e_1;
   u_1 = u;
-} 
+}
 
 
-
-// Funciones para movimiento de los motores para la calibracion
-void motorStop(){
-  digitalWrite(rightMotor1,LOW);
-  digitalWrite(rightMotor2,LOW);
-  analogWrite(rightMotorPWM,0);
-  digitalWrite(leftMotor1,LOW);
-  digitalWrite(leftMotor2,LOW);
-  analogWrite(leftMotorPWM,0);
-}
-void motorRight(){
-  digitalWrite(rightMotor1,HIGH);
-  digitalWrite(rightMotor2,LOW);
-  analogWrite(rightMotorPWM,150);
-  digitalWrite(leftMotor1,LOW);
-  digitalWrite(leftMotor2,HIGH);
-  analogWrite(leftMotorPWM,150); 
-}
-void motorLeft(){
-  digitalWrite(rightMotor1,LOW);
-  digitalWrite(rightMotor2,HIGH);
-  analogWrite(rightMotorPWM,70);
-  digitalWrite(leftMotor1,HIGH);
-  digitalWrite(leftMotor2,LOW);
-  analogWrite(leftMotorPWM,150); 
-}
