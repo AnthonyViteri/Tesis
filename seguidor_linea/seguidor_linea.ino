@@ -13,16 +13,16 @@ uint16_t sensorValues[SensorCount]; //Creamos un arreglo
 
 //Driver MotorDC
 //Motor A
-#define rightMotor1 7 //pin driver1
-#define rightMotor2 6 //pin driver2
+#define rightMotor1 6 //pin driver1
+#define rightMotor2 7 //pin driver2
 #define rightMotorPWM 3 //pin pwmA
 
 //Motor B 
-#define leftMotor1 9 //pin driver3
-#define leftMotor2 8 //pin driver4
+#define leftMotor1 8 //pin driver3
+#define leftMotor2 9 //pin driver4
 #define leftMotorPWM 11 //pin pwmB
 
-#define BaseSpeed 255
+#define BaseSpeed 100
 #define MaxSpeed 255
 
 //-----Variables para el control PID-----
@@ -97,14 +97,19 @@ void loop() {
     de 0 a 7000 (para una línea blanca, utilice readLineWhite() en su lugar)
   */ 
   uint16_t position = qtr.readLineBlack(sensorValues);
-
+  for (uint8_t i = 0; i < SensorCount; i++)
+  {
+    Serial.print(sensorValues[i]);
+    Serial.print(' ');
+  }
+  Serial.println(' ');
   e = position - 3500; //Sacamos el error
 
   //Aplicamos el control con el ecuacion a diferencias
   u = u_1 + (Kp*(e-e_1)) + (Ki*e*Ts) + (Kd*((e-(2*e_1)+e_2)/Ts));
-  if (u > 255) {u = 255;}
-  else if (u < 0) {u = 0;}
-  else{u = u;}
+  //if (u > 255) {u = 255;}
+  //else if (u < 0) {u = 0;}
+  //else{u = u;}
 
   int rightMotorSpeed = BaseSpeed + u;
   int leftMotorSpeed = BaseSpeed - u;
